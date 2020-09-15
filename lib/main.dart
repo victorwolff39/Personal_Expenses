@@ -15,6 +15,11 @@ class PersonalExpensesApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
         fontFamily: "Quicksand",
+        textTheme: ThemeData.light().textTheme.copyWith(
+              button: TextStyle(
+                color: Colors.white,
+              ),
+            ),
       ),
       home: MyHomePage(),
     );
@@ -27,7 +32,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool _showChart = false;
   final List<Transaction> _transactions = [
+    //Hard coding transactions for testing purposes
     Transaction(
       id: "t0",
       title: "New Computer",
@@ -39,55 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
       title: "Steam",
       value: 152.95,
       date: DateTime.now().subtract(Duration(days: 3)),
-    ),
-    Transaction(
-      id: "t2",
-      title: "FrontierStore",
-      value: 17.25,
-      date: DateTime.now().subtract(Duration(days: 2)),
-    ),
-    Transaction(
-      id: "t3",
-      title: "Empadas Jerke",
-      value: 34.68,
-      date: DateTime.now().subtract(Duration(days: 2)),
-    ),
-    Transaction(
-      id: "t4",
-      title: "Hamburgueria",
-      value: 25.00,
-      date: DateTime.now().subtract(Duration(days: 2)),
-    ),
-    Transaction(
-      id: "t5",
-      title: "Conta de Internet",
-      value: 149.90,
-      date: DateTime.now().subtract(Duration(days: 4)),
-    ),
-    Transaction(
-      id: "t6",
-      title: "Cartão de Crédito",
-      value: 1589.55,
-      date: DateTime.now().subtract(Duration(days: 0)),
-    ),
-    Transaction(
-      id: "t7",
-      title: "Roupas",
-      value: 259.42,
-      date: DateTime.now().subtract(Duration(days: 1)),
-    ),
-    Transaction(
-      id: "t8",
-      title: "Conta de Energia",
-      value: 32400.91,
-      date: DateTime.now().subtract(Duration(days: 2)),
-    ),
-    Transaction(
-      id: "t8",
-      title: "Private Internet Access",
-      value: 52.42,
-      date: DateTime.now().subtract(Duration(days: 1)),
-    ),
+    )
   ];
 
   List<Transaction> get _recentTransactions {
@@ -96,12 +55,12 @@ class _MyHomePageState extends State<MyHomePage> {
     }).toList();
   }
 
-  _addTransaction(String title, double value) {
+  _addTransaction(String title, double value, DateTime date) {
     final newTransaction = Transaction(
       id: Random().nextDouble().toString(),
       title: title,
       value: value,
-      date: DateTime.now(),
+      date: date,
     );
 
     setState(() {
@@ -109,6 +68,47 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     Navigator.of(context).pop(); //Closing modal
+  }
+
+  _removeTransaction(String id) {
+    setState(() {
+      _transactions.removeWhere((tr) => tr.id == id);
+    });
+  }
+
+  Future<void> _showDeletionDialog(String id) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (_) {
+        return AlertDialog(
+          title: Text("Remover Transação"),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: [
+                Text("Essa ação não pode ser desfeita."),
+                Text("Tem certeza que deseja continuar?"),
+              ],
+            ),
+          ),
+          actions: [
+            FlatButton(
+              child: Text("Não"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text("Sim"),
+              onPressed: () {
+                _removeTransaction(id);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   _openTransactionFormModal(BuildContext context) {
@@ -120,33 +120,79 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  _switchView() {
+    //Switch from graph or transactions view while in landscape mode
+    bool _showChartAux;
+    if (_showChart) {
+      _showChartAux = false;
+    } else {
+      _showChartAux = true;
+    }
+    setState(() {
+      _showChart = _showChartAux;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    //Detect if the device is in landscape mode
+    bool _isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    if (!_isLandscape)
+      _showChart = false; //Reset the view when turning the device
+
+    final appBar = AppBar(
+      title: Text("Despesas Pessoais"),
+      actions: [
+        _isLandscape
+            ? Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                        _showChart ? Icons.attach_money : Icons.insert_chart),
+                    onPressed: () => _switchView(),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.add),
+                    onPressed: () => _openTransactionFormModal(context),
+                  ),
+                ],
+              )
+            : IconButton(
+                icon: Icon(Icons.add),
+                onPressed: () => _openTransactionFormModal(context),
+              ),
+      ],
+    );
+    final availableHeight = MediaQuery.of(context)
+            .size
+            .height - //Total device height
+        appBar.preferredSize.height - //Appbar size
+        MediaQuery.of(context).padding.top - //Notification bar top (or notch)
+        MediaQuery.of(context)
+            .padding
+            .bottom; //Unused screen bottom (s8 rounded corners)
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Despesas Pessoais"),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.add,
-              color: Colors.white,
-            ),
-            onPressed: () => _openTransactionFormModal(context),
-          )
-        ],
-      ),
+      appBar: appBar,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              child: Chart(_recentTransactions)
-            ),
-            Column(
-              children: [
-                TransactionList(_transactions),
-              ],
-            ),
+            if (_showChart || !_isLandscape)
+              Container(
+                height: _isLandscape ? availableHeight * 0.95 : availableHeight * 0.20,
+                child: Chart(_recentTransactions),
+              ),
+            if (!_showChart || !_isLandscape)
+              Column(
+                children: [
+                  Container(
+                    height:
+                        _isLandscape ? availableHeight : availableHeight * 0.8,
+                    child: TransactionList(_transactions, _showDeletionDialog),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
