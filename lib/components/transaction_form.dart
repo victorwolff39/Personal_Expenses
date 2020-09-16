@@ -46,71 +46,81 @@ class _TransactionFormState extends State<TransactionForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 5,
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              onSubmitted: (_) => _submitForm(),
-              decoration: InputDecoration(
-                labelText: "Nome",
+    return SingleChildScrollView(
+      child: Card(
+        elevation: 5,
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: 10,
+            left: 10,
+            right: 10,
+            bottom: 10 +
+                MediaQuery.of(context)
+                    .viewInsets
+                    .bottom, //Accounting for the device keyboard
+          ),
+          child: Column(
+            children: [
+              TextField(
+                controller: _titleController,
+                onSubmitted: (_) => _submitForm(),
+                decoration: InputDecoration(
+                  labelText: "Nome",
+                ),
               ),
-            ),
-            TextField(
-              controller: _valueController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              //iOS devices need to have decimal: true in order to display decimal options
-              onSubmitted: (_) => _submitForm(),
-              decoration: InputDecoration(
-                labelText: "Valor R\$ ",
+              TextField(
+                controller: _valueController,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                //iOS devices need to have decimal: true in order to display decimal options
+                onSubmitted: (_) => _submitForm(),
+                decoration: InputDecoration(
+                  labelText: "Valor R\$ ",
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(5),
-              child: Row(
-                children: [
-                  _selectedDate == null
-                      ? Expanded(
-                          child: Text(
-                            "Nenhuma data selecionada.",
-                            style: TextStyle(
-                              color: Colors.grey,
+              Padding(
+                padding: const EdgeInsets.all(5),
+                child: Row(
+                  children: [
+                    _selectedDate == null
+                        ? Expanded(
+                            child: Text(
+                              "Nenhuma data selecionada.",
+                              style: TextStyle(
+                                color: Colors.grey,
+                              ),
+                            ),
+                          )
+                        : Expanded(
+                            child: Text(
+                              "Data selecionada: ${DateFormat("d/MM/y").format(_selectedDate)}",
                             ),
                           ),
-                        )
-                      : Expanded(
-                          child: Text(
-                            "Data selecionada: ${DateFormat("d/MM/y").format(_selectedDate)}",
-                          ),
-                        ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.calendar_today,
-                      color: Theme.of(context).primaryColor,
+                    IconButton(
+                      icon: Icon(
+                        Icons.calendar_today,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      onPressed: _showDatePicker,
                     ),
-                    onPressed: _showDatePicker,
+                  ],
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: RaisedButton(
+                      child: Text("Adicionar Transação"),
+                      color: Theme.of(context).primaryColor,
+                      textColor: Theme.of(context).textTheme.button.color,
+                      onPressed: _submitForm,
+                    ),
                   ),
                 ],
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: RaisedButton(
-                    child: Text("Adicionar Transação"),
-                    color: Theme.of(context).primaryColor,
-                    textColor: Theme.of(context).textTheme.button.color,
-                    onPressed: _submitForm,
-                  ),
-                ),
-              ],
-            )
-          ],
+              )
+            ],
+          ),
         ),
       ),
     );

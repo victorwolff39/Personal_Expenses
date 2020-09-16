@@ -120,24 +120,11 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  _switchView() {
-    //Switch from graph or transactions view while in landscape mode
-    bool _showChartAux;
-    if (_showChart) {
-      _showChartAux = false;
-    } else {
-      _showChartAux = true;
-    }
-    setState(() {
-      _showChart = _showChartAux;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
     //Detect if the device is in landscape mode
-    bool _isLandscape =
-        MediaQuery.of(context).orientation == Orientation.landscape;
+    bool _isLandscape = mediaQuery.orientation == Orientation.landscape;
     if (!_isLandscape)
       _showChart = false; //Reset the view when turning the device
 
@@ -150,7 +137,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   IconButton(
                     icon: Icon(
                         _showChart ? Icons.attach_money : Icons.insert_chart),
-                    onPressed: () => _switchView(),
+                    onPressed: () {
+                      setState(() {
+                        _showChart = !_showChart;
+                      });
+                    },
                   ),
                   IconButton(
                     icon: Icon(Icons.add),
@@ -164,14 +155,10 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
       ],
     );
-    final availableHeight = MediaQuery.of(context)
-            .size
-            .height - //Total device height
+    final availableHeight = mediaQuery.size.height - //Total device height
         appBar.preferredSize.height - //Appbar size
-        MediaQuery.of(context).padding.top - //Notification bar top (or notch)
-        MediaQuery.of(context)
-            .padding
-            .bottom; //Unused screen bottom (s8 rounded corners)
+        mediaQuery.padding.top - //Notification bar top (or notch)
+        mediaQuery.padding.bottom; //Unused screen bottom (s8 rounded corners)
     return Scaffold(
       appBar: appBar,
       body: SingleChildScrollView(
@@ -180,15 +167,14 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             if (_showChart || !_isLandscape)
               Container(
-                height: _isLandscape ? availableHeight * 0.95 : availableHeight * 0.20,
+                height: availableHeight * (_isLandscape ? 0.95 : 0.20),
                 child: Chart(_recentTransactions),
               ),
             if (!_showChart || !_isLandscape)
               Column(
                 children: [
                   Container(
-                    height:
-                        _isLandscape ? availableHeight : availableHeight * 0.8,
+                    height: availableHeight * (_isLandscape ? 1 : 0.8),
                     child: TransactionList(_transactions, _showDeletionDialog),
                   ),
                 ],
