@@ -1,7 +1,9 @@
-import 'package:personal_expenses/components/chart.dart';
-import 'package:personal_expenses/components/transaction_form.dart';
-import 'package:flutter/material.dart';
 import 'dart:math';
+import 'dart:io';
+import 'package:flutter/cupertino.dart';
+import 'package:personal_expenses/components/transaction_form.dart';
+import 'package:personal_expenses/components/chart.dart';
+import 'package:flutter/material.dart';
 import 'components/transaction_form.dart';
 import 'components/transaction_list.dart';
 import 'models/transaction.dart';
@@ -32,6 +34,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool isIOS = Platform.isIOS;
+  //bool isIOS = true; //Fixed platform, because I don't have a iOS device... -_-
   bool _showChart = false;
   final List<Transaction> _transactions = [
     //Hard coding transactions for testing purposes
@@ -120,6 +124,15 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Widget _getIconButton(IconData icon, Function fn) {
+    return isIOS
+        ? GestureDetector(
+            onTap: fn,
+            child: Icon(icon),
+          )
+        : IconButton(icon: Icon(icon), onPressed: fn);
+  }
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -128,40 +141,48 @@ class _MyHomePageState extends State<MyHomePage> {
     if (!_isLandscape)
       _showChart = false; //Reset the view when turning the device
 
-    final appBar = AppBar(
-      title: Text("Despesas Pessoais"),
-      actions: [
-        _isLandscape
-            ? Row(
-                children: [
-                  IconButton(
-                    icon: Icon(
-                        _showChart ? Icons.attach_money : Icons.insert_chart),
-                    onPressed: () {
-                      setState(() {
-                        _showChart = !_showChart;
-                      });
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.add),
-                    onPressed: () => _openTransactionFormModal(context),
-                  ),
-                ],
-              )
-            : IconButton(
-                icon: Icon(Icons.add),
-                onPressed: () => _openTransactionFormModal(context),
-              ),
-      ],
-    );
+    //Icons:
+    final iconList = isIOS ? CupertinoIcons.refresh : Icons.refresh;
+    final iconChart = isIOS ? CupertinoIcons.refresh : Icons.insert_chart;
+    final iconAdd = isIOS ? CupertinoIcons.add : Icons.add;
+    //End-Icons
+
+    final actions = [
+      _isLandscape
+          ? Row(
+              children: [
+                _getIconButton(
+                  _showChart ? iconList : iconChart,
+                  () {
+                    setState(() {
+                      _showChart = !_showChart;
+                    });
+                  },
+                ),
+                _getIconButton(
+                    iconAdd, () => _openTransactionFormModal(context)),
+              ],
+            )
+          : _getIconButton(
+              iconAdd,
+              () => _openTransactionFormModal(context),
+            ),
+    ];
+    final PreferredSizeWidget appBar = isIOS
+        ? CupertinoNavigationBar(
+            middle: Text("Despesas Pessoais"),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: actions,
+            ),
+          )
+        : AppBar(title: Text("Despesas Pessoais"), actions: actions);
     final availableHeight = mediaQuery.size.height - //Total device height
         appBar.preferredSize.height - //Appbar size
         mediaQuery.padding.top - //Notification bar top (or notch)
         mediaQuery.padding.bottom; //Unused screen bottom (s8 rounded corners)
-    return Scaffold(
-      appBar: appBar,
-      body: SingleChildScrollView(
+    final bodyPage = SafeArea(
+      child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -182,11 +203,22 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () => _openTransactionFormModal(context),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
+
+    return isIOS
+        ? CupertinoPageScaffold(
+            child: bodyPage,
+            navigationBar: appBar,
+          )
+        : Scaffold(
+            appBar: appBar,
+            body: bodyPage,
+            floatingActionButton: FloatingActionButton(
+              child: Icon(Icons.add),
+              onPressed: () => _openTransactionFormModal(context),
+            ),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerFloat,
+          );
   }
 }
