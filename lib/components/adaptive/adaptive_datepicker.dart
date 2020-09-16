@@ -26,11 +26,6 @@ class AdaptiveDatepicker extends StatelessWidget {
       initialDate: initialDate,
       firstDate: firstDate,
       lastDate: lastDate,
-      /*
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2018),
-      lastDate: DateTime.now(),
-       */
     ).then((pickedDate) {
       //when the datepicker is closed, THEN it will run this function...
       if (pickedDate == null) {
@@ -48,9 +43,9 @@ class AdaptiveDatepicker extends StatelessWidget {
             height: 180,
             child: CupertinoDatePicker(
               mode: CupertinoDatePickerMode.date,
-              initialDateTime: DateTime.now(),
-              minimumDate: DateTime(2018),
-              maximumDate: DateTime.now(),
+              initialDateTime: initialDate,
+              minimumDate: firstDate,
+              maximumDate: lastDate,
               onDateTimeChanged: onDateChanged,
             ),
           )
