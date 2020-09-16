@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:personal_expenses/components/adaptive/adaptive_button.dart';
+import 'package:personal_expenses/components/adaptive/adaptive_datepicker.dart';
+import 'package:personal_expenses/components/adaptive/adaptive_textfield.dart';
 
 class TransactionForm extends StatefulWidget {
-  final void Function(String, double) onSubmit;
+  final void Function(String, double, DateTime) onSubmit;
 
   TransactionForm(this.onSubmit);
 
@@ -10,53 +13,72 @@ class TransactionForm extends StatefulWidget {
 }
 
 class _TransactionFormState extends State<TransactionForm> {
-  final titleController = TextEditingController();
-  final valueController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _valueController = TextEditingController();
+  DateTime _selectedDate = DateTime.now();
 
   _submitForm() {
-    final title = titleController.text;
-    final value = double.tryParse(valueController.text ?? 0.0);
-    if (title.isEmpty || value <= 0) {
+    final title = _titleController.text;
+    final value = double.tryParse(_valueController.text ?? 0.0);
+    if (title.isEmpty || value <= 0 || _selectedDate == null) {
       return;
     }
-    widget.onSubmit(title, value);
+    widget.onSubmit(title, value, _selectedDate);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 5,
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          children: [
-            TextField(
-              controller: titleController,
-              onSubmitted: (_) => _submitForm(),
-              decoration: InputDecoration(
-                labelText: "Nome",
+    return SingleChildScrollView(
+      child: Card(
+        elevation: 5,
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: 10,
+            left: 10,
+            right: 10,
+            bottom: 10 +
+                MediaQuery.of(context)
+                    .viewInsets
+                    .bottom, //Accounting for the device keyboard
+          ),
+          child: Column(
+            children: [
+              AdaptiveTextField(
+                controller: _titleController,
+                onSubmitted: (_) => _submitForm(),
+                label: "Nome",
               ),
-            ),
-            TextField(
-              controller: valueController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              //iOS devices need to have decimal: true in order to display decimal options
-              onSubmitted: (_) => _submitForm(),
-              decoration: InputDecoration(
-                labelText: "Valor R\$ ",
+              AdaptiveTextField(
+                controller: _valueController,
+                onSubmitted: (_) => _submitForm(),
+                label: "Valor R\$",
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
               ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                FlatButton(
-                  child: Text("Nova Transação"),
-                  textColor: Colors.purple,
-                  onPressed: _submitForm,
-                ),
-              ],
-            )
-          ],
+              AdaptiveDatepicker(
+                selectedDate: _selectedDate,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(DateTime.now().year - 2),
+                lastDate: DateTime.now(),
+                onDateChanged: (newDate) {
+                  setState(() {
+                    _selectedDate = newDate;
+                  });
+                },
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: AdaptiveButton(
+                      label: "Adicionar Transação",
+                      onPressed: _submitForm,
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
