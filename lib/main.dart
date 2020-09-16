@@ -15,7 +15,7 @@ class PersonalExpensesApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
-        primarySwatch: Colors.green,
+        primarySwatch: Colors.purple,
         fontFamily: "Quicksand",
         textTheme: ThemeData.light().textTheme.copyWith(
               button: TextStyle(
@@ -33,25 +33,36 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState
+    extends State<MyHomePage> /*with WidgetsBindingObserver*/ {
+  /*
+  //--Example of a OBSERVER to check for updates in app state (app closed, app not in focus...)
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this); //Adding a observer
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print(state); //Action executed when app state is updated
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this); //Removing observer when not in use
+  }
+
+  //P.s. uncomment "with WidgetsBindingObserver" from class _MyHomePageState to use the observer
+  */
+
   bool isIOS = Platform.isIOS;
+
   //bool isIOS = true; //Fixed platform, because I don't have a iOS device... -_-
   bool _showChart = false;
-  final List<Transaction> _transactions = [
-    //Hard coding transactions for testing purposes
-    Transaction(
-      id: "t0",
-      title: "New Computer",
-      value: 4955.50,
-      date: DateTime.now().subtract(Duration(days: 33)),
-    ),
-    Transaction(
-      id: "t1",
-      title: "Steam",
-      value: 152.95,
-      date: DateTime.now().subtract(Duration(days: 3)),
-    )
-  ];
+  final List<Transaction> _transactions = [];
 
   List<Transaction> get _recentTransactions {
     return _transactions.where((tr) {
